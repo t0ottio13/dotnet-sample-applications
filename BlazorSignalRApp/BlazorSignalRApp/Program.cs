@@ -1,5 +1,8 @@
 using BlazorSignalRApp.Client.Pages;
 using BlazorSignalRApp.Components;
+// 追加
+using Microsoft.AspNetCore.ResponseCompression;
+using BlazorSignalRApp.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
+
+// 応答の圧縮ミドルウェア サービスを追加
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+          new[] { "application/octet-stream" });
+});
 
 var app = builder.Build();
 
@@ -22,6 +32,9 @@ else
     app.UseHsts();
 }
 
+// 応答圧縮ミドルウェア
+app.UseResponseCompression();
+
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
@@ -31,5 +44,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(Counter).Assembly);
+app.MapHub<ChatHub>("/chathub");
 
 app.Run();
